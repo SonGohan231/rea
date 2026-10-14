@@ -74,5 +74,5 @@ export default async function handler(req,res){
   if(!msg||Array.isArray(msg)||msg.jsonrpc!=="2.0"||typeof msg.method!=="string")return response(res,400,error(msg?.id??null,-32600,"Invalid Request"));
   if(msg.id===undefined){res.statusCode=202;return res.end();}
   try{return response(res,200,await invoke(msg));}
-  catch(e){console.error("REA MCP failed:",String(e?.message||e).slice(0,350));return response(res,200,error(msg.id,-32603,"REA temporarily unavailable"));}
+  catch(e){console.error("REA MCP failed:",String(e?.message||e).slice(0,350));return response(res,200,error(msg.id,-32603,"REA unavailable: "+String(e?.message||e).slice(0,350)));}
 }
