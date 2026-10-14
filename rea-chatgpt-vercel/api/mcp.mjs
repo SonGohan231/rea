@@ -3,6 +3,10 @@ import {createRequire} from "node:module";
 import {join,dirname} from "node:path";
 import {timingSafeEqual} from "node:crypto";
 import {existsSync} from "node:fs";
+import {fileURLToPath} from "node:url";
+// Static file references are needed so Vercel bundles the non-imported REA executable.
+const tracedReaScript = fileURLToPath(new URL("../node_modules/rea-agents/scripts/rea.mjs", import.meta.url));
+const tracedReaRuntime = fileURLToPath(new URL("../node_modules/rea-agents/dist/mcp/main.js", import.meta.url));
 
 const require=createRequire(import.meta.url);
 const KEY=process.env.REA_CONNECTOR_KEY||"";
@@ -22,7 +26,7 @@ function invoke(message){
     let rea;
     try{rea=join(dirname(require.resolve("rea-agents/package.json")),"scripts","rea.mjs");}
     catch(e){reject(e);return;}
-    if(!existsSync(rea)){reject(new Error("REA launcher file missing: "+rea));return;}
+    if(!existsSync(rea)){reject(new Error("REA launcher missing: "+rea+" traced="+tracedReaScript+" runtimeExists="+existsSync(tracedReaRuntime)));return;}
     const child=spawn(process.execPath,[rea,"mcp"],{stdio:["pipe","pipe","pipe"],env:{...process.env,REA_MCP_MAX_RESPONSE_BYTES:"12000000"}});
     let count=0,buf="",stderr="",nextId=1,finished=false;
     const pending=new Map();
