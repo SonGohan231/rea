@@ -4,6 +4,7 @@ import {join,dirname} from "node:path";
 import {timingSafeEqual} from "node:crypto";
 import {existsSync} from "node:fs";
 import {fileURLToPath} from "node:url";
+import {CLOUD_TOOLS, cloudCall} from "./cloud.mjs";
 // Static file references are needed so Vercel bundles the non-imported REA executable.
 const tracedReaScript = fileURLToPath(new URL("../node_modules/rea-agents/scripts/rea.mjs", import.meta.url));
 const tracedReaRuntime = fileURLToPath(new URL("../node_modules/rea-agents/dist/mcp/main.js", import.meta.url));
@@ -79,6 +80,18 @@ export default async function handler(req,res){
   let msg;try{msg=await input(req);}catch{return response(res,400,error(null,-32700,"Parse error"));}
   if(!msg||Array.isArray(msg)||msg.jsonrpc!=="2.0"||typeof msg.method!=="string")return response(res,400,error(msg?.id??null,-32600,"Invalid Request"));
   if(msg.id===undefined){res.statusCode=202;return res.end();}
-  try{return response(res,200,await invoke(msg));}
+  if(msg.method==="tools/call" && typeof msg.params?.name==="string" && msg.params.name.startsWith("cloud_")) {
+    try {
+      const data=await cloudCall(msg.params.name,msg.params.arguments||{});
+      return response(res,200,{jsonrpc:"2.0",id:msg.id,result:{content:[{type:"text",text:JSON.stringify(data)}],isError:false}});
+    } catch(err) {
+      return response(res,200,{jsonrpc:"2.0",id:msg.id,result:{content:[{type:"text",text:String(err?.message||err).slice(0,240)}],isError:true}});
+    }
+  }
+  try {
+    const result=await invoke(msg);
+    if(msg.method==="tools/list" && Array.isArray(result.result?.tools)) result.result.tools.push(...CLOUD_TOOLS);
+    return response(res,200,result);
+  }
   catch(e){console.error("REA MCP failed:",String(e?.message||e).slice(0,350));return response(res,200,error(msg.id,-32603,"REA unavailable: "+String(e?.message||e).slice(0,350)));}
 }
