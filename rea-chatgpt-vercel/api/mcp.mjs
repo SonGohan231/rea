@@ -2,6 +2,7 @@ import {spawn} from "node:child_process";
 import {createRequire} from "node:module";
 import {join,dirname} from "node:path";
 import {timingSafeEqual} from "node:crypto";
+import {existsSync} from "node:fs";
 
 const require=createRequire(import.meta.url);
 const KEY=process.env.REA_CONNECTOR_KEY||"";
@@ -21,6 +22,7 @@ function invoke(message){
     let rea;
     try{rea=join(dirname(require.resolve("rea-agents/package.json")),"scripts","rea.mjs");}
     catch(e){reject(e);return;}
+    if(!existsSync(rea)){reject(new Error("REA launcher file missing: "+rea));return;}
     const child=spawn(process.execPath,[rea,"mcp"],{stdio:["pipe","pipe","pipe"],env:{...process.env,REA_MCP_MAX_RESPONSE_BYTES:"12000000"}});
     let count=0,buf="",stderr="",nextId=1,finished=false;
     const pending=new Map();
@@ -36,7 +38,7 @@ function invoke(message){
       write({jsonrpc:"2.0",id,method,...(params===undefined?{}:{params})});
     }
     child.once("error",e=>finish(e));
-    child.once("exit",(code,signal)=>finish(new Error("REA exited "+(code??signal)+": "+stderr.slice(-250))));
+    child.once("exit",(code,signal)=>finish(new Error("REA exited "+(code??signal)+": "+stderr.slice(0,950))));
     child.stderr.on("data",chunk=>{stderr=(stderr+String(chunk)).slice(-1600);});
     child.stdout.on("data",chunk=>{
       count+=chunk.length;if(count>12000000){finish(new Error("REA output too large"));return;}
