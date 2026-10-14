@@ -1,0 +1,1 @@
+export default function handler(_req,res){res.setHeader("cache-control","no-store");res.status(200).json({service:"rea-chatgpt-vercel",status:/^[A-Za-z0-9_-]{32,128}$/.test(process.env.REA_CONNECTOR_KEY||"")?"adapter-configured":"missing-secret",transport:"streamable-http"});}
