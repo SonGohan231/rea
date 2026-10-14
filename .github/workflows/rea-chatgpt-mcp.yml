@@ -1,0 +1,27 @@
+name: REA ChatGPT MCP smoke test
+on:
+  push:
+    paths:
+      - 'rea-chatgpt-mcp/**'
+      - '.github/workflows/rea-chatgpt-mcp.yml'
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: rea-chatgpt-mcp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: rea-chatgpt-mcp/package.json
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Check adapter syntax
+        run: node --check server.mjs
+      - name: Verify real MCP initialize and tools/list
+        run: node smoke.mjs
