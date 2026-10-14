@@ -150,7 +150,8 @@ export async function cloudCall(name,args={}) {
     const minimum_length=Math.max(4,Math.min(32,Number(args.minimum_length)||5));
     const limit=Math.max(1,Math.min(200,Number(args.limit)||60));
     const {bytes}=await getFile(id);
-    return {file_id:id,count:0,strings:extractStrings(bytes,minimum_length,limit),scanned_bytes:bytes.length};
+    const strings=extractStrings(bytes,minimum_length,limit);
+    return {file_id:id,count:strings.length,strings,scanned_bytes:bytes.length};
   }
   if(name==="cloud_read_text") {
     const id=checkId(args.file_id);
@@ -213,6 +214,8 @@ export async function handleCloudHttp(req,res,path,searchParams) {
     return json(res,405,{error:"method_not_allowed"});
   }catch(err){
     console.error("Private blob operation failed:",String(err?.message||err).slice(0,180));
-    return json(res,400,{error:"cloud_file_operation_failed",message:String(err?.message||err).slice(0,120)});
+    const msg=String(err?.message||err);
+    const safe=/^(Invalid REA file_id|File not found|File must contain|File exceeds maximum|Upload is larger)/.test(msg) ? msg : "Cloud storage operation failed";
+    return json(res,400,{error:"cloud_file_operation_failed",message:safe});
   }
 }
