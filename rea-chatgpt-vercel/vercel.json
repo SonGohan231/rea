@@ -6,11 +6,5 @@
       "source": "/mcp/:key",
       "destination": "/api/mcp?connector_key=:key"
     }
-  ],
-  "functions": {
-    "server.mjs": {
-      "maxDuration": 300,
-      "includeFiles": "node_modules/rea-agents/**"
-    }
-  }
+  ]
 }
