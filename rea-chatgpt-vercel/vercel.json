@@ -8,7 +8,7 @@
     }
   ],
   "functions": {
-    "api/mcp.mjs": {
+    "server.mjs": {
       "maxDuration": 300,
       "includeFiles": "node_modules/rea-agents/**"
     }
