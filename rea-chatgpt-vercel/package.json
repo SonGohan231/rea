@@ -7,9 +7,10 @@
     "node": "^24.11.0"
   },
   "dependencies": {
-    "rea-agents": "6.4.0"
+    "rea-agents": "6.4.0",
+    "@vercel/blob": "2.8.1"
   },
   "scripts": {
-    "check": "node --check api/mcp.mjs && node --check api/health.mjs"
+    "check": "node --check server.mjs && node --check api/mcp.mjs && node --check api/cloud.mjs"
   }
 }
