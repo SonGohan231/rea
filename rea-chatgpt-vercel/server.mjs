@@ -1,5 +1,6 @@
 import {createServer} from "node:http";
 import mcp from "./api/mcp.mjs";
+import {handleCloudHttp} from "./api/cloud.mjs";
 
 const server=createServer(async(req,res)=>{
   try {
@@ -9,6 +10,9 @@ const server=createServer(async(req,res)=>{
       res.setHeader("cache-control","no-store");
       res.statusCode=200;
       return res.end(JSON.stringify({service:"rea-chatgpt-vercel",status:/^[A-Za-z0-9_-]{32,128}$/.test(process.env.REA_CONNECTOR_KEY||"")?"adapter-configured":"missing-secret",transport:"streamable-http"}));
+    }
+    if(u.pathname.startsWith("/upload/") || u.pathname.startsWith("/files/") || u.pathname.startsWith("/download/")) {
+      return await handleCloudHttp(req,res,u.pathname,u.searchParams);
     }
     if(u.pathname==="/api/mcp"){
       req.query={connector_key:u.searchParams.get("connector_key")};
